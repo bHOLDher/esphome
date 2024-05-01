@@ -1813,6 +1813,40 @@ async def haier_action(var, config, args):
     cg.add(var.set_code(template_))
 
 
+# Wh1080
+Wh1080Data, Wh1080BinarySensor, Wh1080Trigger, Wh1080Action, Wh1080Dumper = declare_protocol(
+    "Wh1080"
+)
+Wh1080Action = ns.class_("Wh1080Action", RemoteTransmitterActionBase)
+WH1080_SCHEMA = cv.Schema(
+    {
+        cv.Optional(CONF_CODE): cv.All([cv.hex_uint8_t], cv.Length(min=10, max=20)),
+    }
+)
+
+
+@register_binary_sensor("wh1080", Wh1080BinarySensor, WH1080_SCHEMA)
+def wh1080_binary_sensor(var, config):
+    cg.add(var.set_code(config[CONF_CODE]))
+
+
+@register_trigger("wh1080", Wh1080Trigger, Wh1080Data)
+def wh1080_trigger(var, config):
+    pass
+
+
+@register_dumper("wh1080", Wh1080Dumper)
+def wh1080_dumper(var, config):
+    pass
+
+
+@register_action("wh1080", Wh1080Action, WH1080_SCHEMA)
+async def wh1080_action(var, config, args):
+    vec_ = cg.std_vector.template(cg.uint8)
+    template_ = await cg.templatable(config[CONF_CODE], args, vec_, vec_)
+    cg.add(var.set_code(template_))
+
+
 # ABBWelcome
 (
     ABBWelcomeData,

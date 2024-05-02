@@ -22,7 +22,7 @@ constexpr uint32_t BIT_ZERO_HIGH_US = 1500;
 // constexpr uint32_t BIT_ONE_SPACE_US = 1000;
 // constexpr uint32_t BIT_ZERO_SPACE_US = 1000;
 //constexpr unsigned int WH1080_IR_PACKET_BIT_SIZE = 88;  // 1 byte preamble + 10 bytes data
-constexpr unsigned int WH1080_IR_PACKET_BIT_SIZE = 4;  // 1 byte preamble + 10 bytes data
+constexpr unsigned int WH1080_IR_PACKET_BIT_SIZE = 86;  // 6x "1" preamble bits + 10 bytes data
 
 void Wh1080Protocol::encode_byte_(RemoteTransmitData *dst, uint8_t item) {
   // for (uint8_t mask = 1 << 7; mask != 0; mask >>= 1) {
@@ -53,29 +53,7 @@ void Wh1080Protocol::encode(RemoteTransmitData *dst, const Wh1080Data &data) {
 
 bool Wh1080Protocol::expect_sync(RemoteReceiveData &src) {
 
-/*
-  if (!src.is_valid(6))
-    return false;
-
-    // Follow Inverted logic
-    if (!src.peek_mark(BIT_LOW_US))
-      return false;
-    if (!src.peek_space(BIT_ONE_HIGH_US, 1))
-      return false;
-    if (!src.peek_mark(BIT_LOW_US, 2))
-      return false;
-    if (!src.peek_space(BIT_ONE_HIGH_US, 3))
-      return false;
-    if (!src.peek_mark(BIT_LOW_US, 4))
-      return false;
-    if (!src.peek_space(BIT_ONE_HIGH_US, 5))
-      return false;
-    if (!src.peek_mark(BIT_LOW_US, 6))
-      return false;
-    src.advance(7);
-      */
-
-  if (!src.is_valid(7))
+  if (!src.is_valid(11))
     return false;
 
   // Follow Non Inverted logic
@@ -95,87 +73,60 @@ bool Wh1080Protocol::expect_sync(RemoteReceiveData &src) {
     return false;
   if (!src.peek_space(BIT_LOW_US, 7))
     return false;
-  src.advance(8);
+  if (!src.peek_mark(BIT_ONE_HIGH_US, 8))
+    return false;
+  if (!src.peek_space(BIT_LOW_US, 9))
+    return false;
+  if (!src.peek_mark(BIT_ONE_HIGH_US, 10))
+    return false;
+  if (!src.peek_space(BIT_LOW_US, 11))
+    return false;
+  src.advance(14);
 
-
-    // if (!src.peek_mark(HEADER_HIGH_US, 8))
-    //   return false;
-    // if (!src.peek_space(HEADER_LOW_US, 9))
-    //   return false;
-    // if (!src.peek_mark(HEADER_HIGH_US, 10))
-    //   return false;
-    // if (!src.peek_space(HEADER_LOW_US, 11))
-    //   return false;
-
-  // } else {
-  //   // We can't peek a space at the beginning because signals starts with a low to high transition.
-  //   // this long space at the beginning is the separation between the transmissions itself, so it is actually
-  //   // added at the end kind of artificially (by the value given to "idle:" option by the user in the yaml)
-  //   if (!src.peek_mark(this->sync_low_))
-  //     return false;
-  //   src.advance(1);
-  //   return true;
-  // }
   return true;
 }
 
 optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
 
   size_t size = src.size() - src.get_index() - 1;
-  if (size < WH1080_IR_PACKET_BIT_SIZE * 4)
+  // Size seems to be 86*2 bits, sometimes 87
+  if (size < WH1080_IR_PACKET_BIT_SIZE)
     return {};
 
-
   bool preambleFound = false;
-  for (uint8_t searchCounter = 1; searchCounter <= WH1080_IR_PACKET_BIT_SIZE*2; searchCounter++) {
+  for (uint8_t searchCounter = 1; searchCounter <= 4; searchCounter++) {
+    // Search forward 4 bits in case one or two zeros were received in the preamble
     if (!this->expect_sync(src)) {
-      src.advance(1);
+      src.advance(2);
     } else {
       preambleFound = true;
       break;
     }
-    // if (!src.peek_mark(HEADER_HIGH_US) 
-    //       || !src.peek_space(HEADER_LOW_US, 1)
-    //       || !src.peek_mark(HEADER_HIGH_US, 2)
-    //       || !src.peek_space(HEADER_LOW_US, 3)
-    //       ) {
-    //   src.advance(2);
-    // } else
   }
   if (!preambleFound) return {};
 
-    // ignore if sync doesn't exist
-  // if (!this->expect_sync(src)) {
-  //   return {};
-  // }
-
-  // for (uint8_t preambitcounter = 1; preambitcounter <= 4; preambitcounter++) {
-  //   //if (!src.expect_item(HEADER_LOW_US, HEADER_HIGH_US)) {
-  //   if (!src.expect_item(HEADER_HIGH_US, HEADER_LOW_US)) {
-  //     return {};
-  //   }
-  // }
   ESP_LOGI(TAG, "Received Wh1080 preamble size %s",format_hex_pretty(size).c_str());
     
   Wh1080Data out;
-  out.data.push_back(0x13);
-  return out;
+  // out.data.push_back(0x13);
+  // return out;
 
-  if (!src.expect_mark(BIT_LOW_US)) {
-    return {};
-  }
+  // if (!src.expect_mark(BIT_LOW_US)) {
+  //   return {};
+  // }
 
-  size = WH1080_IR_PACKET_BIT_SIZE * 2;
+  // Should be 80 bits, needs debugging
+  size = 72 * 2;
   uint8_t checksum = 0;
   while (size > 0) {
     uint8_t data = 0;
     for (uint8_t mask = 0x80; mask != 0; mask >>= 1) {
-      if (src.expect_space(BIT_ONE_HIGH_US)) {
+      if (src.expect_mark(BIT_ONE_HIGH_US)) {
         data |= mask;
-      } else if (!src.expect_space(BIT_ZERO_HIGH_US)) {
+      } else if (!src.expect_mark(BIT_ZERO_HIGH_US)) {
         return {};
       }
-      if (!src.expect_mark(BIT_LOW_US)) {
+      if (!src.expect_space(BIT_LOW_US)) {
         return {};
       }
       size -= 2;
@@ -188,6 +139,7 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
     //   return {};
     // }
   }
+  ESP_LOGI(TAG, "Received Wh1080 packet");
   return out;
 }
 

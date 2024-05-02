@@ -81,7 +81,7 @@ bool Wh1080Protocol::expect_sync(RemoteReceiveData &src) {
     return false;
   if (!src.peek_space(BIT_LOW_US, 11))
     return false;
-  src.advance(14);
+  src.advance(13);
 
   return true;
 }
@@ -108,30 +108,24 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
   ESP_LOGI(TAG, "Received Wh1080 preamble size %s",format_hex_pretty(size).c_str());
     
   Wh1080Data out;
-  // out.data.push_back(0x13);
-  // return out;
-
-  // if (!src.expect_mark(BIT_LOW_US)) {
-  //   return {};
-  // }
 
   // Should be 80 bits, needs debugging
-  size = 72 * 2;
+  size = 80 * 2;
   uint8_t checksum = 0;
   while (size > 0) {
     uint8_t data = 0;
     for (uint8_t mask = 0x80; mask != 0; mask >>= 1) {
+      if (!src.expect_space(BIT_LOW_US)) {
+        return {};
+      }
       if (src.expect_mark(BIT_ONE_HIGH_US)) {
         data |= mask;
       } else if (!src.expect_mark(BIT_ZERO_HIGH_US)) {
         return {};
       }
-      if (!src.expect_space(BIT_LOW_US)) {
-        return {};
-      }
       size -= 2;
     }
-    if (size > 0) {
+    if (size >= 0) {
       checksum += data;
       out.data.push_back(data);
     }

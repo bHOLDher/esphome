@@ -17,6 +17,27 @@ constexpr unsigned int WH1080_IR_PACKET_BIT_SIZE = 86;  // 6x "1" preamble bits 
 
 // }
 
+// void Wh1080Protocol::setup() {
+  
+// }
+
+// void Wh1080Protocol::loop() {
+  
+// }
+
+// void Wh1080Protocol::update() {
+//     // if (this->sensor1_ != nullptr)
+//     //   this->sensor1_->publish_state(1.0f);
+//     // if (this->sensor2_ != nullptr)
+//     //   this->sensor2_->publish_state(2.0f);
+//     // if (this->sensor3_ != nullptr)
+//     //   this->sensor3_->publish_state(3.0f);
+// }
+
+// void Wh1080Protocol::dump_config() {
+//     ESP_LOGCONFIG(TAG, "Wh1080Protocol sensor");
+// }
+
 void Wh1080Protocol::encode(RemoteTransmitData *dst, const Wh1080Data &data) {
 
 }
@@ -114,6 +135,31 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
     float rain = (float)((int32)out.data[6] << 8 | (int32)out.data[7]) * 0.2794;
     u_int8_t batteryFlag = out.data[8] >> 4;
     float windDirection = (float)(out.data[8] & 0x0F) * 22.5;
+
+    // if (deviceId_sensor_ != nullptr) {
+    //   deviceId_sensor_->publish_state(deviceId);
+    // }
+    // if (temp_sensor_ != nullptr) {
+    //   temp_sensor_->publish_state(temp);
+    // }
+    // if (humidity_sensor_ != nullptr) {
+    //   humidity_sensor_->publish_state(humidity);
+    // }
+    // if (windAvg_sensor_ != nullptr) {
+    //   windAvg_sensor_->publish_state(windAvg);
+    // }
+    // if (windGust_sensor_ != nullptr) {
+    //   windGust_sensor_->publish_state(windGust);
+    // }
+    // if (rain_sensor_ != nullptr) {
+    //   rain_sensor_->publish_state(rain);
+    // }
+    // if (batteryFlag_sensor_ != nullptr) {
+    //   batteryFlag_sensor_->publish_state(batteryFlag);
+    // }
+    // if (windDirection_sensor_ != nullptr) {
+    //   windDirection_sensor_->publish_state(windDirection);
+    // }
 
     ESP_LOGI(TAG, "Received Wh1080 %i %fC %i %fm/s %fm/s %fmm %i %fdeg",deviceId, temp, humidity, windAvg, windGust, rain, batteryFlag, windDirection);
   }

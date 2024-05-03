@@ -1815,6 +1815,7 @@ async def haier_action(var, config, args):
 
 # Wh1080
 Wh1080Data, Wh1080BinarySensor, Wh1080Trigger, Wh1080Action, Wh1080Dumper = declare_protocol(
+#Wh1080Data, Wh1080BinarySensor, Wh1080Trigger, Wh1080Dumper = declare_protocol(
     "Wh1080"
 )
 Wh1080Action = ns.class_("Wh1080Action", RemoteTransmitterActionBase)
@@ -1840,11 +1841,11 @@ def wh1080_dumper(var, config):
     pass
 
 
-@register_action("wh1080", Wh1080Action, WH1080_SCHEMA)
-async def wh1080_action(var, config, args):
-    vec_ = cg.std_vector.template(cg.uint8)
-    template_ = await cg.templatable(config[CONF_CODE], args, vec_, vec_)
-    cg.add(var.set_code(template_))
+# @register_action("wh1080", Wh1080Action, WH1080_SCHEMA)
+# async def wh1080_action(var, config, args):
+#     vec_ = cg.std_vector.template(cg.uint8)
+#     template_ = await cg.templatable(config[CONF_CODE], args, vec_, vec_)
+#     cg.add(var.set_code(template_))
 
 
 # ABBWelcome

@@ -19,7 +19,7 @@ class Wh1080Protocol : public RemoteProtocol<Wh1080Data> {
   void dump(const Wh1080Data &data) override;
 
  protected:
-  void encode_byte_(RemoteTransmitData *dst, uint8_t item);
+  // void encode_byte_(RemoteTransmitData *dst, uint8_t item);
   bool expect_sync(RemoteReceiveData &src);
 };
 

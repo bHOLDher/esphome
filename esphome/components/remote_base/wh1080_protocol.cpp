@@ -6,49 +6,19 @@ namespace remote_base {
 
 static const char *const TAG = "remote.wh1080";
 
-// Mark = Low, Space = High?
-// constexpr uint32_t HEADER_LOW_US = 1000;
-// constexpr uint32_t HEADER_HIGH_US = 500;
+
 constexpr uint32_t BIT_LOW_US = 1000;
 constexpr uint32_t BIT_ONE_HIGH_US = 500;
 constexpr uint32_t BIT_ZERO_HIGH_US = 1500;
 
-// constexpr uint32_t HEADER_LOW_US = 1000;
-// constexpr uint32_t HEADER_HIGH_US = 500;
-// //constexpr uint32_t BIT_MARK_US = 540;
-// constexpr uint32_t BIT_ONE_MARK_US = 500;
-// constexpr uint32_t BIT_ZERO_MARK_US = 1500;
-// constexpr uint32_t BIT_SPACE_US = 1000;
-// constexpr uint32_t BIT_ONE_SPACE_US = 1000;
-// constexpr uint32_t BIT_ZERO_SPACE_US = 1000;
-//constexpr unsigned int WH1080_IR_PACKET_BIT_SIZE = 88;  // 1 byte preamble + 10 bytes data
 constexpr unsigned int WH1080_IR_PACKET_BIT_SIZE = 86;  // 6x "1" preamble bits + 10 bytes data
 
-void Wh1080Protocol::encode_byte_(RemoteTransmitData *dst, uint8_t item) {
-  // for (uint8_t mask = 1 << 7; mask != 0; mask >>= 1) {
-  //   if (item & mask) {
-  //     dst->space(BIT_ONE_SPACE_US);
-  //   } else {
-  //     dst->space(BIT_ZERO_SPACE_US);
-  //   }
-  //   dst->mark(BIT_MARK_US);
-  // }
-}
+// void Wh1080Protocol::encode_byte_(RemoteTransmitData *dst, uint8_t item) {
+
+// }
 
 void Wh1080Protocol::encode(RemoteTransmitData *dst, const Wh1080Data &data) {
-  // dst->set_carrier_frequency(38000);
-  // dst->reserve(5 + ((data.data.size() + 1) * 2));
-  // dst->mark(HEADER_LOW_US);
-  // dst->space(HEADER_LOW_US);
-  // dst->mark(HEADER_LOW_US);
-  // dst->space(HEADER_HIGH_US);
-  // dst->mark(BIT_MARK_US);
-  // uint8_t checksum = 0;
-  // for (uint8_t item : data.data) {
-  //   this->encode_byte_(dst, item);
-  //   checksum += item;
-  // }
-  // this->encode_byte_(dst, checksum);
+
 }
 
 bool Wh1080Protocol::expect_sync(RemoteReceiveData &src) {
@@ -135,8 +105,19 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
   if (out.data.size() == 10)
   {
     ESP_LOGI(TAG, "crc %s",format_hex_pretty(out.data[9]).c_str());
+
+    u_int8_t deviceId = (out.data[0] << 4) | (out.data[1] >> 4);
+    float temp = (float)((((int32)(out.data[1] & 0x0F) << 8) | (int32)out.data[2]) - 400) / 10;
+    u_int8_t humidity = out.data[3];
+    float windAvg = (float)out.data[4] * 0.34;
+    float windGust = (float)out.data[5] * 0.34;
+    float rain = (float)((int32)out.data[6] << 8 | (int32)out.data[7]) * 0.2794;
+    u_int8_t batteryFlag = out.data[8] >> 4;
+    float windDirection = (float)(out.data[8] & 0x0F) * 22.5;
+
+    ESP_LOGI(TAG, "Received Wh1080 %i %fC %i %fm/s %fm/s %fmm %i %fdeg",deviceId, temp, humidity, windAvg, windGust, rain, batteryFlag, windDirection);
   }
-  ESP_LOGI(TAG, "Received Wh1080 packet");
+  //ESP_LOGI(TAG, "Received Wh1080 packet");
   return out;
 }
 

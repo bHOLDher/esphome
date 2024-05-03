@@ -81,6 +81,7 @@ bool Wh1080Protocol::expect_sync(RemoteReceiveData &src) {
     return false;
   if (!src.peek_space(BIT_LOW_US, 11))
     return false;
+  // Align with data bits following preamble:
   src.advance(13);
 
   return true;
@@ -92,6 +93,7 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
   // Size seems to be 86*2 bits, sometimes 87
   if (size < WH1080_IR_PACKET_BIT_SIZE)
     return {};
+  if (size == 87*2) src.advance(2);
 
   bool preambleFound = false;
   for (uint8_t searchCounter = 1; searchCounter <= 4; searchCounter++) {
@@ -109,7 +111,7 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
     
   Wh1080Data out;
 
-  // Should be 80 bits, needs debugging
+  // Should be 80 bits of data
   size = 80 * 2;
   uint8_t checksum = 0;
   while (size > 0) {
@@ -129,9 +131,10 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
       checksum += data;
       out.data.push_back(data);
     }
-    // else if (checksum != data) {
-    //   return {};
-    // }
+  }
+  if (out.data.size() == 10)
+  {
+    ESP_LOGI(TAG, "crc %s",format_hex_pretty(out.data[9]).c_str());
   }
   ESP_LOGI(TAG, "Received Wh1080 packet");
   return out;

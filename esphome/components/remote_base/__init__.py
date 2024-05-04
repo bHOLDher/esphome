@@ -1823,63 +1823,75 @@ async def haier_action(var, config, args):
 
 
 # Wh1080
-Wh1080Data, Wh1080BinarySensor, Wh1080Trigger, Wh1080Action, Wh1080Dumper = declare_protocol(
+(Wh1080Data, Wh1080BinarySensor, Wh1080Trigger, Wh1080Action, Wh1080Dumper) = declare_protocol(
     "Wh1080"
 )
-Wh1080Action = ns.class_("Wh1080Action", RemoteTransmitterActionBase)
+
+CONF_DEVICEID = "deviceid"
+CONF_TEMP = "temp"
+
+#Wh1080Action = ns.class_("Wh1080Action", RemoteTransmitterActionBase)
 WH1080_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(): cv.declare_id(Wh1080BinarySensor),
-        cv.Optional(CONF_CODE): cv.All([cv.hex_uint8_t], cv.Length(min=10, max=20)),
-        cv.Optional("deviceid"): sensor.sensor_schema(
-            state_class=STATE_CLASS_MEASUREMENT
-        ).extend(),
-        cv.Optional("temp"): sensor.sensor_schema(
-            unit_of_measurement=UNIT_CELSIUS,
-            accuracy_decimals=1,
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ).extend(),
-        cv.Optional("humidity"): sensor.sensor_schema(
-            unit_of_measurement=UNIT_PERCENT,
-            accuracy_decimals=0,
-            device_class=DEVICE_CLASS_HUMIDITY,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ).extend(),
-        cv.Optional("windavg"): sensor.sensor_schema(
-            unit_of_measurement="m/s",
-            accuracy_decimals=1,
-            device_class=DEVICE_CLASS_WIND_SPEED,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ).extend(),
-        cv.Optional("windgust"): sensor.sensor_schema(
-            unit_of_measurement="m/s",
-            accuracy_decimals=1,
-            device_class=DEVICE_CLASS_WIND_SPEED,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ).extend(),
-        cv.Optional("rain"): sensor.sensor_schema(
-            unit_of_measurement="mm",
-            accuracy_decimals=1,
-            device_class=DEVICE_CLASS_PRECIPITATION,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ).extend(),
-        cv.Optional("batteryflag"): sensor.sensor_schema(
-            state_class=STATE_CLASS_MEASUREMENT,
-        ).extend(),
-        cv.Optional("winddirection"): sensor.sensor_schema(
-            unit_of_measurement=UNIT_DEGREES,
-            accuracy_decimals=1,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ).extend(),
+        #cv.GenerateID(): cv.declare_id(Wh1080BinarySensor),        
+        cv.Optional(CONF_CODE): cv.Any(cv.hex_uint8_t, cv.uint8_t),
+        # cv.Optional(CONF_DEVICEID): sensor.sensor_schema(
+        #     state_class=STATE_CLASS_MEASUREMENT
+        # ).extend(),
+        # cv.Optional(CONF_TEMP): sensor.sensor_schema(
+        #     unit_of_measurement=UNIT_CELSIUS,
+        #     accuracy_decimals=1,
+        #     device_class=DEVICE_CLASS_TEMPERATURE,
+        #     state_class=STATE_CLASS_MEASUREMENT,
+        # ).extend(),
+        # cv.Optional("humidity"): sensor.sensor_schema(
+        #     unit_of_measurement=UNIT_PERCENT,
+        #     accuracy_decimals=0,
+        #     device_class=DEVICE_CLASS_HUMIDITY,
+        #     state_class=STATE_CLASS_MEASUREMENT,
+        # ).extend(),
+        # cv.Optional("windavg"): sensor.sensor_schema(
+        #     unit_of_measurement="m/s",
+        #     accuracy_decimals=1,
+        #     device_class=DEVICE_CLASS_WIND_SPEED,
+        #     state_class=STATE_CLASS_MEASUREMENT,
+        # ).extend(),
+        # cv.Optional("windgust"): sensor.sensor_schema(
+        #     unit_of_measurement="m/s",
+        #     accuracy_decimals=1,
+        #     device_class=DEVICE_CLASS_WIND_SPEED,
+        #     state_class=STATE_CLASS_MEASUREMENT,
+        # ).extend(),
+        # cv.Optional("rain"): sensor.sensor_schema(
+        #     unit_of_measurement="mm",
+        #     accuracy_decimals=1,
+        #     device_class=DEVICE_CLASS_PRECIPITATION,
+        #     state_class=STATE_CLASS_MEASUREMENT,
+        # ).extend(),
+        # cv.Optional("batteryflag"): sensor.sensor_schema(
+        #     state_class=STATE_CLASS_MEASUREMENT,
+        # ).extend(),
+        # cv.Optional("winddirection"): sensor.sensor_schema(
+        #     unit_of_measurement=UNIT_DEGREES,
+        #     accuracy_decimals=1,
+        #     state_class=STATE_CLASS_MEASUREMENT,
+        # ).extend(),
     }
-).extend(cv.polling_component_schema('60s'))
+)
+#.extend(cv.polling_component_schema('60s'))
 
 
 @register_binary_sensor("wh1080", Wh1080BinarySensor, WH1080_SCHEMA)
 def wh1080_binary_sensor(var, config):
-    cg.add(var.set_code(config[CONF_CODE]))
-
+    #cg.add(var.set_code(config[CONF_CODE]))
+    cg.add(
+        var.set_data(
+            cg.StructInitializer(
+                Wh1080Data,
+                ("code", config[CONF_CODE]),
+            )
+        )
+    )
 
 @register_trigger("wh1080", Wh1080Trigger, Wh1080Data)
 def wh1080_trigger(var, config):
@@ -1891,11 +1903,14 @@ def wh1080_dumper(var, config):
     pass
 
 
-# @register_action("wh1080", Wh1080Action, WH1080_SCHEMA)
-# async def wh1080_action(var, config, args):
-#     vec_ = cg.std_vector.template(cg.uint8)
-#     template_ = await cg.templatable(config[CONF_CODE], args, vec_, vec_)
-#     cg.add(var.set_code(template_))
+@register_action("wh1080", Wh1080Action, WH1080_SCHEMA)
+async def wh1080_action(var, config, args):
+    template_ = await cg.templatable(config[CONF_CODE], args, cg.uint32)
+    cg.add(var.set_data(template_))
+    #vec_ = cg.std_vector.template(cg.uint8)
+    #template_ = await cg.templatable(config[CONF_CODE], args, vec_, vec_)
+    #cg.add(var.set_code(template_))
+
 
 
 # ABBWelcome

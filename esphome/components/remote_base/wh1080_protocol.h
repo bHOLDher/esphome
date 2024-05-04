@@ -1,5 +1,6 @@
 #pragma once
 
+#include "esphome/core/component.h"
 #include "remote_base.h"
 #include <vector>
 //#include "esphome/core/component.h"
@@ -10,8 +11,9 @@ namespace remote_base {
 
 struct Wh1080Data {
   std::vector<uint8_t> data;
+  uint8_t code;
 
-  bool operator==(const Wh1080Data &rhs) const { return data == rhs.data; }
+  bool operator==(const Wh1080Data &rhs) const { return /*data == rhs.data*/ true; }
 };
 
 class Wh1080Protocol : public RemoteProtocol<Wh1080Data> {
@@ -19,6 +21,7 @@ class Wh1080Protocol : public RemoteProtocol<Wh1080Data> {
   void encode(RemoteTransmitData *dst, const Wh1080Data &data) override;
   optional<Wh1080Data> decode(RemoteReceiveData src) override;
   void dump(const Wh1080Data &data) override;
+  //void set_code(const u_int8_t &code) {  }
   // void set_deviceid_sensor(sensor::Sensor *deviceid_sensor) { deviceId_sensor_ = deviceid_sensor; }
   // void set_temp_sensor(sensor::Sensor *temp_sensor) { temp_sensor_ = temp_sensor; }
   // void set_humidity_sensor(sensor::Sensor *humidity_sensor) { humidity_sensor_ = humidity_sensor; }
@@ -49,9 +52,20 @@ class Wh1080Protocol : public RemoteProtocol<Wh1080Data> {
 
 DECLARE_REMOTE_PROTOCOL(Wh1080)
 
+// class Wh1080BinarySensor : public RemoteReceiverBinarySensorBase {
+//   public:
+//     bool matches(RemoteReceiveData src) override {
+//       return true;
+//     }
+
+// };
+
+// using Wh1080Trigger = RemoteReceiverTrigger<Wh1080Protocol>;
+
 template<typename... Ts> class Wh1080Action : public RemoteTransmitterActionBase<Ts...> {
  public:
-  TEMPLATABLE_VALUE(std::vector<uint8_t>, code)
+  //TEMPLATABLE_VALUE(std::vector<uint8_t>, code)
+  TEMPLATABLE_VALUE(uint8_t, code)
 
   void encode(RemoteTransmitData *dst, Ts... x) override {
     Wh1080Data data{};

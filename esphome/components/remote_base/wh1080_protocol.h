@@ -22,7 +22,7 @@ class Wh1080Protocol : public RemoteProtocol<Wh1080Data> {
   void dump(const Wh1080Data &data) override;
   //void set_code(const u_int8_t &code) {  }
   // void set_deviceid_sensor(sensor::Sensor *deviceid_sensor) { deviceId_sensor_ = deviceid_sensor; }
-  // void set_temp_sensor(sensor::Sensor *temp_sensor) { temp_sensor_ = temp_sensor; }
+  //void set_temp_sensor(sensor::Sensor *temp_sensor) { temp_sensor_ = temp_sensor; }
   // void set_humidity_sensor(sensor::Sensor *humidity_sensor) { humidity_sensor_ = humidity_sensor; }
   // void set_windavg_sensor(sensor::Sensor *windavg_sensor) { windAvg_sensor_ = windavg_sensor; }
   // void set_windgust_sensor(sensor::Sensor *windgust_sensor) { windGust_sensor_ = windgust_sensor; }
@@ -39,7 +39,7 @@ class Wh1080Protocol : public RemoteProtocol<Wh1080Data> {
   // void encode_byte_(RemoteTransmitData *dst, uint8_t item);
   bool expect_sync(RemoteReceiveData &src);
   // sensor::Sensor *deviceId_sensor_{nullptr};
-  // sensor::Sensor *temp_sensor_{nullptr};
+  //sensor::Sensor *temp_sensor_{nullptr};
   // sensor::Sensor *humidity_sensor_{nullptr};
   // sensor::Sensor *windAvg_sensor_{nullptr};
   // sensor::Sensor *windGust_sensor_{nullptr};

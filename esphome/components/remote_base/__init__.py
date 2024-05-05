@@ -1880,6 +1880,16 @@ WH1080_SCHEMA = cv.Schema(
 )
 #.extend(cv.polling_component_schema('60s'))
 
+# CONF_TEMP = sensor.sensor_schema(
+#             unit_of_measurement=UNIT_CELSIUS,
+#             accuracy_decimals=1,
+#             device_class=DEVICE_CLASS_TEMPERATURE,
+#             state_class=STATE_CLASS_MEASUREMENT,
+#         )
+# #sens = await sensor.new_sensor(CONF_TEMP)
+# sens = sensor.new_sensor(CONF_TEMP)
+# cg.add(getattr(WH1080_SCHEMA,f"set_temp"))(sens)
+
 
 @register_binary_sensor("wh1080", Wh1080BinarySensor, WH1080_SCHEMA)
 def wh1080_binary_sensor(var, config):

@@ -125,7 +125,22 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
   }
   if (out.data.size() == 10)
   {
-    ESP_LOGI(TAG, "crc %s",format_hex_pretty(out.data[9]).c_str());
+
+    uint8_t crc = 0;
+    uint8_t len = 9;
+    uint8_t *addr = &out.data[0];
+    // Indicated changes are from reference CRC-8 function in OneWire library
+    while (len--) {
+      uint8_t inbyte = *addr++;
+      for (uint8_t i = 8; i; i--) {
+        uint8_t mix = (crc ^ inbyte) & 0x80; // changed from & 0x01
+        crc <<= 1; // changed from right shift
+        if (mix) crc ^= 0x31;// changed from 0x8C;
+        inbyte <<= 1; // changed from right shift
+      }
+    }
+
+    ESP_LOGI(TAG, "crc received: %s, calculated: %s",format_hex_pretty(out.data[9]).c_str(),format_hex_pretty(crc).c_str());
 
     u_int8_t deviceId = (out.data[0] << 4) | (out.data[1] >> 4);
     float temp = (float)((((int32)(out.data[1] & 0x0F) << 8) | (int32)out.data[2]) - 400) / 10;

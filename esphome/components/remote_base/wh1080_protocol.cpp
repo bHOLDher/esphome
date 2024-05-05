@@ -98,7 +98,7 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
   }
   if (!preambleFound) return {};
 
-  ESP_LOGI(TAG, "Received Wh1080 preamble size %s",format_hex_pretty(size).c_str());
+  //ESP_LOGI(TAG, "Received Wh1080 preamble size %s",format_hex_pretty(size).c_str());
     
   Wh1080Data out;
 
@@ -139,8 +139,10 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
         inbyte <<= 1; // changed from right shift
       }
     }
-
-    ESP_LOGI(TAG, "crc received: %s, calculated: %s",format_hex_pretty(out.data[9]).c_str(),format_hex_pretty(crc).c_str());
+    if (out.data[9] != crc) {
+      ESP_LOGI(TAG, "crc received: %s, calculated: %s",format_hex_pretty(out.data[9]).c_str(),format_hex_pretty(crc).c_str());
+      return {};
+    }
 
     u_int8_t deviceId = (out.data[0] << 4) | (out.data[1] >> 4);
     float temp = (float)((((int32)(out.data[1] & 0x0F) << 8) | (int32)out.data[2]) - 400) / 10;
@@ -176,7 +178,7 @@ optional<Wh1080Data> Wh1080Protocol::decode(RemoteReceiveData src) {
     //   windDirection_sensor_->publish_state(windDirection);
     // }
 
-    ESP_LOGI(TAG, "Received Wh1080 %i %fC %i %fm/s %fm/s %fmm %i %fdeg",deviceId, temp, humidity, windAvg, windGust, rain, batteryFlag, windDirection);
+    //ESP_LOGI(TAG, "Received Wh1080 %i %fC %i %fm/s %fm/s %fmm %i %fdeg",deviceId, temp, humidity, windAvg, windGust, rain, batteryFlag, windDirection);
   }
   //ESP_LOGI(TAG, "Received Wh1080 packet");
   return out;
